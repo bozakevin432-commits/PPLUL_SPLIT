@@ -1,0 +1,932 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PPL Workout Hub</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg:#080809; --surface:#101012; --border:#1e1e26; --text:#e8e8f0; --muted:#5a5a70;
+  --push:#ff4500; --pull:#0ea5e9; --legs:#c8f542; --cardio:#f472b6;
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{background:var(--bg);color:var(--text);font-family:'DM Sans',sans-serif;min-height:100vh;overflow-x:hidden;}
+
+/* NAV */
+.nav{position:sticky;top:0;z-index:200;background:rgba(8,8,9,.95);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 12px;height:56px;gap:8px;}
+.nav-logo{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;white-space:nowrap;flex-shrink:0;}
+.nav-logo span{color:var(--muted);font-size:12px;}
+.day-tabs{display:flex;gap:4px;flex:1;}
+.day-tab{flex:1;padding:5px 4px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:9px;font-weight:600;letter-spacing:.5px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;align-items:center;gap:1px;}
+.day-tab .te{font-size:13px;} .day-tab .tl{font-size:8px;letter-spacing:.5px;text-transform:uppercase;}
+.day-tab.active[data-day="home"]{border-color:#444;color:var(--text);background:rgba(255,255,255,.05);}
+.day-tab.active[data-day="push"]{background:rgba(255,69,0,.12);border-color:var(--push);color:var(--push);}
+.day-tab.active[data-day="pull"]{background:rgba(14,165,233,.12);border-color:var(--pull);color:var(--pull);}
+.day-tab.active[data-day="legs"]{background:rgba(200,245,66,.1);border-color:var(--legs);color:var(--legs);}
+.day-tab.active[data-day="upper"]{background:rgba(168,85,247,.12);border-color:#a855f7;color:#a855f7;}
+.day-tab.active[data-day="cardio"]{background:rgba(244,114,182,.12);border-color:var(--cardio);color:var(--cardio);}
+
+/* VIEWS */
+.view{display:none;animation:fadeIn .28s ease;}
+.view.active{display:block;}
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* ====== HOME ====== */
+.home{padding:24px 16px 60px;max-width:700px;margin:0 auto;}
+.home-tag{display:inline-block;font-size:10px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:3px 10px;border-radius:2px;background:var(--border);color:var(--muted);margin-bottom:10px;}
+.home-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,12vw,72px);line-height:.88;letter-spacing:1px;margin-bottom:12px;}
+.home-title .p{color:var(--push)} .home-title .pl{color:var(--pull)} .home-title .l{color:var(--legs)}
+.home-sub{font-size:13px;color:var(--muted);line-height:1.5;max-width:380px;margin-bottom:26px;}
+.sec-label{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:22px;}
+.stat-box{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:13px;text-align:center;}
+.stat-num{font-family:'Bebas Neue',sans-serif;font-size:28px;line-height:1;}
+.stat-label{font-size:9px;color:var(--muted);letter-spacing:1px;text-transform:uppercase;margin-top:3px;}
+
+/* WEEKLY GRID */
+.week-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:5px;margin-bottom:24px;}
+.week-day{background:var(--surface);border:1px solid var(--border);border-radius:7px;padding:8px 2px;text-align:center;}
+.wd-name{color:var(--muted);font-size:8px;letter-spacing:1px;text-transform:uppercase;margin-bottom:3px;}
+.wd-type{font-weight:700;font-size:9px;}
+.week-day.pu{border-color:rgba(255,69,0,.35);background:rgba(255,69,0,.07);} .week-day.pu .wd-type{color:var(--push);}
+.week-day.pl{border-color:rgba(14,165,233,.35);background:rgba(14,165,233,.07);} .week-day.pl .wd-type{color:var(--pull);}
+.week-day.lg{border-color:rgba(200,245,66,.35);background:rgba(200,245,66,.06);} .week-day.lg .wd-type{color:var(--legs);}
+.week-day.up{border-color:rgba(168,85,247,.35);background:rgba(168,85,247,.07);} .week-day.up .wd-type{color:#a855f7;}
+.week-day.rs .wd-type{color:var(--muted);}
+
+/* DAY CARDS */
+.day-cards{display:flex;flex-direction:column;gap:9px;}
+.day-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:16px 18px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:14px;}
+.day-card:hover{transform:translateX(3px);}
+.day-card[data-t="push"]:hover{border-color:var(--push);} .day-card[data-t="pull"]:hover{border-color:var(--pull);}
+.day-card[data-t="legs"]:hover{border-color:var(--legs);} .day-card[data-t="upper"]:hover{border-color:#a855f7;}
+.day-card[data-t="cardio"]:hover{border-color:var(--cardio);}
+.dc-icon{width:44px;height:44px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.day-card[data-t="push"] .dc-icon{background:rgba(255,69,0,.12);}
+.day-card[data-t="pull"] .dc-icon{background:rgba(14,165,233,.12);}
+.day-card[data-t="legs"] .dc-icon{background:rgba(200,245,66,.08);}
+.day-card[data-t="upper"] .dc-icon{background:rgba(168,85,247,.1);}
+.day-card[data-t="cardio"] .dc-icon{background:rgba(244,114,182,.1);}
+.dc-info{flex:1;}
+.dc-name{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;line-height:1;}
+.day-card[data-t="push"] .dc-name{color:var(--push);} .day-card[data-t="pull"] .dc-name{color:var(--pull);}
+.day-card[data-t="legs"] .dc-name{color:var(--legs);} .day-card[data-t="upper"] .dc-name{color:#a855f7;}
+.day-card[data-t="cardio"] .dc-name{color:var(--cardio);}
+.dc-muscles{font-size:11px;color:var(--muted);margin-top:2px;}
+.dc-meta{display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0;}
+.dc-stat{font-size:10px;color:var(--muted);white-space:nowrap;}
+.dc-prog{font-size:11px;font-weight:600;white-space:nowrap;}
+.day-card[data-t="push"] .dc-prog{color:var(--push);} .day-card[data-t="pull"] .dc-prog{color:var(--pull);}
+.day-card[data-t="legs"] .dc-prog{color:var(--legs);} .day-card[data-t="upper"] .dc-prog{color:#a855f7;}
+.mini-bar{height:3px;background:var(--border);border-radius:4px;overflow:hidden;width:52px;}
+.mini-fill{height:100%;border-radius:4px;transition:width .4s ease;}
+.day-card[data-t="push"] .mini-fill{background:var(--push);} .day-card[data-t="pull"] .mini-fill{background:var(--pull);}
+.day-card[data-t="legs"] .mini-fill{background:var(--legs);} .day-card[data-t="upper"] .mini-fill{background:#a855f7;}
+.arrow{color:var(--muted);font-size:18px;}
+
+/* ====== WORKOUT PAGES ====== */
+.workout-page{padding-bottom:60px;}
+.w-header{padding:28px 18px 22px;position:relative;overflow:hidden;border-bottom:1px solid var(--border);}
+.w-header::before{content:attr(data-word);font-family:'Bebas Neue',sans-serif;font-size:clamp(80px,28vw,170px);color:var(--acc);opacity:.05;position:absolute;top:-10px;right:-10px;line-height:1;pointer-events:none;user-select:none;}
+.header-tag{display:inline-block;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;padding:4px 12px;border-radius:2px;margin-bottom:10px;background:var(--acc);color:#fff;}
+#legs-page .header-tag,#legs2-page .header-tag{color:#000;}
+.w-h1{font-family:'Bebas Neue',sans-serif;font-size:clamp(40px,10vw,66px);letter-spacing:2px;line-height:.9;}
+.w-h1 span{color:var(--acc);}
+.header-meta{margin-top:12px;display:flex;gap:7px;flex-wrap:wrap;}
+.meta-pill{background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:4px 12px;font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;}
+.meta-pill span{color:var(--text);font-weight:500;}
+
+.prog-wrap{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:12px 16px;margin:13px 14px 6px;}
+.prog-label{display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:6px;}
+.prog-label strong{color:var(--acc);}
+.prog-bar{height:5px;background:var(--border);border-radius:10px;overflow:hidden;}
+.prog-fill{height:100%;background:var(--acc);border-radius:10px;transition:width .4s ease;}
+
+.warmup-strip{margin:0 14px 8px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:9px;padding:10px 14px;font-size:12px;color:var(--muted);line-height:1.5;}
+.warmup-strip strong{color:#f5a623;}
+
+.w-content{padding:0 14px;max-width:700px;margin:0 auto;}
+
+.muscle-bars{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:14px;margin-bottom:4px;}
+.muscle-row{display:flex;align-items:center;gap:10px;margin-bottom:7px;}
+.muscle-row:last-child{margin-bottom:0;}
+.muscle-label{font-size:11px;font-weight:600;letter-spacing:1px;text-transform:uppercase;width:76px;flex-shrink:0;}
+.bar-track{flex:1;height:5px;background:var(--border);border-radius:4px;overflow:hidden;}
+.bar-fill{height:100%;border-radius:4px;animation:growBar 1s ease forwards;width:0;}
+@keyframes growBar{to{width:var(--w)}}
+.muscle-pct{font-size:11px;font-weight:600;width:32px;text-align:right;}
+
+.sec-div{display:flex;align-items:center;gap:8px;margin:20px 0 10px;}
+.sec-div::after{content:'';flex:1;height:1px;background:var(--border);}
+.sd-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+.sd-name{font-family:'Bebas Neue',sans-serif;font-size:19px;letter-spacing:2px;}
+.sd-count{font-size:10px;color:var(--muted);background:var(--border);padding:2px 8px;border-radius:20px;}
+
+.ex-list{display:flex;flex-direction:column;gap:9px;}
+.ex-card{background:var(--surface);border:1px solid var(--border);border-radius:13px;padding:15px 16px;position:relative;overflow:hidden;cursor:pointer;transition:border-color .2s,transform .15s;}
+.ex-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;border-radius:3px 0 0 3px;background:var(--cc);}
+.ex-card:hover{border-color:var(--cc);transform:translateX(2px);}
+.ex-card.done{opacity:.38;}
+.ex-card.done .ex-name{text-decoration:line-through;}
+.ex-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:10px;}
+.ex-num{font-family:'Bebas Neue',sans-serif;font-size:12px;color:var(--cc);letter-spacing:1px;margin-bottom:2px;}
+.ex-name{font-size:15px;font-weight:600;color:var(--text);line-height:1.2;}
+.ex-target{font-size:10px;color:var(--muted);margin-top:3px;text-transform:uppercase;letter-spacing:.5px;}
+.ex-card-right{display:flex;flex-direction:column;align-items:flex-end;gap:5px;flex-shrink:0;}
+.ex-badge{background:color-mix(in srgb,var(--cc) 15%,transparent);border:1px solid color-mix(in srgb,var(--cc) 30%,transparent);color:var(--cc);font-size:10px;font-weight:600;letter-spacing:1px;text-transform:uppercase;padding:2px 8px;border-radius:20px;white-space:nowrap;}
+.expand-icon{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0;transition:transform .2s;line-height:1;}
+.ex-card.open .expand-icon{transform:rotate(180deg);color:var(--acc);}
+.sets-row{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap;}
+.set-chip{background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:6px;padding:4px 8px;font-size:11px;color:var(--text);font-weight:500;}
+.chip-label{color:var(--muted);font-size:10px;margin-right:3px;}
+.rest-note{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:#f5a623;margin-top:5px;}
+.ex-tip{font-size:12px;color:var(--muted);margin-top:10px;padding-top:10px;border-top:1px solid var(--border);line-height:1.55;display:none;}
+.ex-card.open .ex-tip{display:block;}
+
+.trans-banner{background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:7px;padding:9px 13px;font-size:12px;color:var(--muted);margin:12px 0 3px;display:flex;align-items:center;gap:7px;}
+
+.tips-grid{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:8px;}
+.tip-card{background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:13px;}
+.tip-icon{font-size:18px;margin-bottom:5px;}
+.tip-title{font-size:12px;font-weight:600;margin-bottom:3px;}
+.tip-body{font-size:11px;color:var(--muted);line-height:1.45;}
+
+.done-banner{background:rgba(100,255,100,.05);border:1px solid rgba(100,255,100,.15);border-radius:11px;padding:14px;text-align:center;margin-top:14px;display:none;}
+.done-banner.show{display:block;}
+.done-banner-icon{font-size:26px;margin-bottom:5px;}
+.done-banner-title{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:#6dff6d;}
+.done-banner-sub{font-size:11px;color:var(--muted);margin-top:3px;}
+
+.reset-btn{display:block;width:100%;margin-top:14px;padding:12px;background:none;border:1px solid var(--border);border-radius:10px;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;cursor:pointer;transition:border-color .2s,color .2s;}
+.reset-btn:hover{border-color:#ff4d4d;color:#ff4d4d;}
+.section-gap{height:22px;}
+.footer-note{text-align:center;font-size:10px;color:var(--muted);padding:28px 0 14px;letter-spacing:1px;}
+
+/* ====== CARDIO CALCULATOR ====== */
+.cardio-page{padding:24px 16px 60px;max-width:700px;margin:0 auto;}
+.cardio-title{font-family:'Bebas Neue',sans-serif;font-size:clamp(42px,11vw,68px);line-height:.9;letter-spacing:1px;margin-bottom:6px;}
+.cardio-title span{color:var(--cardio);}
+.cardio-sub{font-size:13px;color:var(--muted);margin-bottom:24px;line-height:1.5;}
+
+.cardio-form{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:20px;}
+.form-row{margin-bottom:18px;}
+.form-label{font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;}
+.form-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.form-input:focus{border-color:var(--cardio);}
+.form-input option{background:#1a1a22;}
+.form-select-wrap{position:relative;}
+.form-select-wrap::after{content:'▾';position:absolute;right:13px;top:50%;transform:translateY(-50%);color:var(--muted);pointer-events:none;font-size:14px;}
+
+.cat-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px;}
+.cat-tab{padding:6px 12px;border-radius:7px;border:1px solid var(--border);background:none;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s;white-space:nowrap;}
+.cat-tab.active{background:rgba(244,114,182,.12);border-color:var(--cardio);color:var(--cardio);}
+
+.cardio-options{display:grid;grid-template-columns:1fr 1fr;gap:7px;}
+.cardio-opt{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:10px 12px;cursor:pointer;transition:all .2s;display:flex;flex-direction:column;gap:2px;}
+.cardio-opt:hover{border-color:var(--cardio);}
+.cardio-opt.selected{background:rgba(244,114,182,.08);border-color:var(--cardio);}
+.opt-name{font-size:13px;font-weight:600;color:var(--text);}
+.opt-met{font-size:10px;color:var(--muted);}
+.opt-cat{font-size:9px;color:var(--cardio);letter-spacing:1px;text-transform:uppercase;margin-top:1px;}
+
+.time-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+.num-input{width:100%;background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px 14px;font-family:'DM Sans',sans-serif;font-size:16px;font-weight:600;color:var(--text);outline:none;transition:border-color .2s;-webkit-appearance:none;}
+.num-input:focus{border-color:var(--cardio);}
+
+.calc-btn{width:100%;padding:14px;background:var(--cardio);border:none;border-radius:10px;color:#000;font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;cursor:pointer;transition:opacity .2s;margin-top:4px;}
+.calc-btn:hover{opacity:.88;}
+
+.result-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;margin-top:14px;display:none;}
+.result-card.show{display:block;animation:fadeIn .3s ease;}
+.result-header{display:flex;align-items:center;gap:12px;margin-bottom:18px;}
+.result-icon{font-size:32px;}
+.result-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--muted);}
+.result-activity{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:1px;color:var(--cardio);line-height:1.1;}
+
+.cal-display{text-align:center;margin:18px 0;}
+.cal-num{font-family:'Bebas Neue',sans-serif;font-size:72px;line-height:1;color:var(--cardio);}
+.cal-unit{font-size:13px;color:var(--muted);letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+
+.result-breakdown{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px;}
+.rb-box{background:var(--bg);border:1px solid var(--border);border-radius:9px;padding:11px;text-align:center;}
+.rb-val{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--text);}
+.rb-label{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;margin-top:2px;}
+
+.result-note{font-size:11px;color:var(--muted);line-height:1.5;padding:10px 13px;background:rgba(255,255,255,.02);border:1px solid var(--border);border-radius:8px;}
+
+.log-section{margin-top:20px;}
+.log-title{font-size:10px;font-weight:600;letter-spacing:3px;text-transform:uppercase;color:var(--muted);margin-bottom:10px;}
+.log-list{display:flex;flex-direction:column;gap:7px;}
+.log-item{background:var(--surface);border:1px solid var(--border);border-radius:9px;padding:11px 14px;display:flex;justify-content:space-between;align-items:center;}
+.log-left{}
+.log-name{font-size:13px;font-weight:600;}
+.log-detail{font-size:11px;color:var(--muted);margin-top:1px;}
+.log-cals{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--cardio);}
+.log-del{background:none;border:none;color:var(--muted);font-size:16px;cursor:pointer;padding:0 0 0 10px;transition:color .2s;}
+.log-del:hover{color:#ff4d4d;}
+.log-total{background:rgba(244,114,182,.06);border:1px solid rgba(244,114,182,.2);border-radius:9px;padding:12px 14px;display:flex;justify-content:space-between;align-items:center;margin-top:8px;}
+.log-total-label{font-size:12px;font-weight:600;color:var(--muted);}
+.log-total-val{font-family:'Bebas Neue',sans-serif;font-size:26px;color:var(--cardio);}
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav class="nav">
+  <div class="nav-logo">PPL <span>HUB</span></div>
+  <div class="day-tabs">
+    <button class="day-tab active" data-day="home" onclick="showView('home')"><span class="te">🏠</span><span class="tl">Home</span></button>
+    <button class="day-tab" data-day="push" onclick="showView('push')"><span class="te">🔥</span><span class="tl">Push</span></button>
+    <button class="day-tab" data-day="pull" onclick="showView('pull')"><span class="te">💧</span><span class="tl">Pull</span></button>
+    <button class="day-tab" data-day="legs" onclick="showView('legs')"><span class="te">⚡</span><span class="tl">Legs</span></button>
+    <button class="day-tab" data-day="upper" onclick="showView('upper')"><span class="te">💪</span><span class="tl">Upper</span></button>
+    <button class="day-tab" data-day="cardio" onclick="showView('cardio')"><span class="te">🏃</span><span class="tl">Cardio</span></button>
+  </div>
+</nav>
+
+<!-- ====== HOME VIEW ====== -->
+<div class="view active" id="view-home">
+  <div class="home">
+    <div class="home-tag">Full Weekly Plan</div>
+    <div class="home-title"><span class="p">PUSH</span><br><span class="pl">PULL</span><br><span class="l">LEGS</span></div>
+    <div class="home-sub">Your complete weekly training hub — 5 workout days, cardio tracker, and full progress across every session.</div>
+
+    <div class="sec-label">Overall Progress</div>
+    <div class="stats-row">
+      <div class="stat-box"><div class="stat-num" id="total-done" style="color:var(--legs)">0</div><div class="stat-label">Exercises Done</div></div>
+      <div class="stat-box"><div class="stat-num" id="total-ex" style="color:var(--muted)">34</div><div class="stat-label">Total Exercises</div></div>
+      <div class="stat-box"><div class="stat-num" id="days-done" style="color:var(--pull)">0/5</div><div class="stat-label">Days Complete</div></div>
+    </div>
+
+    <div class="sec-label">Weekly Schedule</div>
+    <div class="week-grid">
+      <div class="week-day pu"><div class="wd-name">Mon</div><div class="wd-type">PUSH</div></div>
+      <div class="week-day pl"><div class="wd-name">Tue</div><div class="wd-type">PULL</div></div>
+      <div class="week-day lg"><div class="wd-name">Wed</div><div class="wd-type">LEGS</div></div>
+      <div class="week-day rs"><div class="wd-name">Thu</div><div class="wd-type">REST</div></div>
+      <div class="week-day up"><div class="wd-name">Fri</div><div class="wd-type">UPPER</div></div>
+      <div class="week-day lg"><div class="wd-name">Sat</div><div class="wd-type">LEGS</div></div>
+      <div class="week-day rs"><div class="wd-name">Sun</div><div class="wd-type">REST</div></div>
+    </div>
+
+    <div class="sec-label">Start a Workout</div>
+    <div class="day-cards">
+      <div class="day-card" data-t="push" onclick="showView('push')">
+        <div class="dc-icon">🔥</div>
+        <div class="dc-info"><div class="dc-name">PUSH DAY</div><div class="dc-muscles">Chest · Shoulders · Triceps · Mon</div></div>
+        <div class="dc-meta"><div class="dc-stat">8 ex · ~75 min</div><div class="mini-bar"><div class="mini-fill" id="push-mini" style="width:0%"></div></div><div class="dc-prog" id="push-ph">0/8</div></div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="day-card" data-t="pull" onclick="showView('pull')">
+        <div class="dc-icon">💧</div>
+        <div class="dc-info"><div class="dc-name">PULL DAY</div><div class="dc-muscles">Back · Biceps · Rear Delts · Tue</div></div>
+        <div class="dc-meta"><div class="dc-stat">8 ex · ~70 min</div><div class="mini-bar"><div class="mini-fill" id="pull-mini" style="width:0%"></div></div><div class="dc-prog" id="pull-ph">0/8</div></div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="day-card" data-t="legs" onclick="showView('legs')">
+        <div class="dc-icon">🏀</div>
+        <div class="dc-info"><div class="dc-name">LEGS + CORE</div><div class="dc-muscles">Bball · Power · Explosion · Vertical · Wed &amp; Sat</div></div>
+        <div class="dc-meta"><div class="dc-stat">10 ex · ~70 min</div><div class="mini-bar"><div class="mini-fill" id="legs-mini" style="width:0%"></div></div><div class="dc-prog" id="legs-ph">0/10</div></div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="day-card" data-t="upper" onclick="showView('upper')">
+        <div class="dc-icon">💪</div>
+        <div class="dc-info"><div class="dc-name">UPPER BODY</div><div class="dc-muscles">Push + Pull Combined · Fri</div></div>
+        <div class="dc-meta"><div class="dc-stat">8 ex · ~80 min</div><div class="mini-bar"><div class="mini-fill" id="upper-mini" style="width:0%"></div></div><div class="dc-prog" id="upper-ph">0/8</div></div>
+        <div class="arrow">›</div>
+      </div>
+      <div class="day-card" data-t="cardio" onclick="showView('cardio')">
+        <div class="dc-icon">🏃</div>
+        <div class="dc-info"><div class="dc-name">CARDIO</div><div class="dc-muscles">Calorie burn calculator · Any day</div></div>
+        <div class="dc-meta"><div class="dc-stat">40+ activities</div></div>
+        <div class="arrow">›</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ====== PUSH VIEW ====== -->
+<div class="view" id="view-push">
+<div class="workout-page" id="push-page" style="--acc:var(--push)">
+  <div class="w-header" data-word="PUSH">
+    <div class="header-tag">Monday · Workout Plan</div>
+    <div class="w-h1">PUSH<br><span>DAY</span></div>
+    <div class="header-meta">
+      <div class="meta-pill">⏱ <span>~70–85 min</span></div>
+      <div class="meta-pill">🔥 <span>8 Exercises</span></div>
+      <div class="meta-pill">💪 <span>Chest · Shoulders · Triceps</span></div>
+    </div>
+  </div>
+  <div class="prog-wrap"><div class="prog-label"><span>Progress</span><strong id="push-prog-text">0 / 8 done</strong></div><div class="prog-bar"><div class="prog-fill" id="push-prog-fill" style="width:0%"></div></div></div>
+  <div class="w-content">
+    <div class="muscle-bars">
+      <div class="muscle-row"><div class="muscle-label" style="color:#ff4500">Chest</div><div class="bar-track"><div class="bar-fill" style="--w:50%;background:#ff4500"></div></div><div class="muscle-pct" style="color:#ff4500">50%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#ff8c00">Shoulders</div><div class="bar-track"><div class="bar-fill" style="--w:30%;background:#ff8c00"></div></div><div class="muscle-pct" style="color:#ff8c00">30%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#ffcc00">Triceps</div><div class="bar-track"><div class="bar-fill" style="--w:20%;background:#ffcc00"></div></div><div class="muscle-pct" style="color:#ffcc00">20%</div></div>
+    </div>
+    <div class="sec-div"><div class="sd-dot" style="background:#ff4500"></div><div class="sd-name" style="color:#ff4500">CHEST</div><div class="sd-count">3 ex</div></div>
+    <div class="ex-list" id="push-chest"></div>
+    <div class="trans-banner">💤 2 min rest → Shoulders</div>
+    <div class="sec-div"><div class="sd-dot" style="background:#ff8c00"></div><div class="sd-name" style="color:#ff8c00">SHOULDERS</div><div class="sd-count">3 ex</div></div>
+    <div class="ex-list" id="push-shoulder"></div>
+    <div class="trans-banner">💤 90 sec rest → Triceps</div>
+    <div class="sec-div"><div class="sd-dot" style="background:#ffcc00"></div><div class="sd-name" style="color:#ffcc00">TRICEPS</div><div class="sd-count">2 ex</div></div>
+    <div class="ex-list" id="push-tricep"></div>
+    <div class="section-gap"></div>
+    <div class="tips-grid">
+      <div class="tip-card"><div class="tip-icon">📈</div><div class="tip-title">Progressive Overload</div><div class="tip-body">Add weight or reps each session. Small weekly increases compound into big gains.</div></div>
+      <div class="tip-card"><div class="tip-icon">🔁</div><div class="tip-title">Order Matters</div><div class="tip-body">Heavy compounds first when fresh. Never go to isolation before your big presses.</div></div>
+      <div class="tip-card"><div class="tip-icon">🍽️</div><div class="tip-title">Fuel Up</div><div class="tip-body">Eat protein + carbs 1–2 hrs before. 0.7–1g protein per lb bodyweight daily.</div></div>
+      <div class="tip-card"><div class="tip-icon">😴</div><div class="tip-title">Recover Hard</div><div class="tip-body">Allow 48–72 hrs before training push muscles again. Sleep 7–9 hrs.</div></div>
+    </div>
+    <div class="done-banner" id="push-done"><div class="done-banner-icon">🔥</div><div class="done-banner-title">PUSH DAY COMPLETE!</div><div class="done-banner-sub">Chest, shoulders and triceps destroyed. Rest up 💪</div></div>
+    <button class="reset-btn" onclick="resetDay('push')">↺ Reset Push Day</button>
+  </div>
+  <div class="footer-note">Push Day · Mon · Chest · Shoulders · Triceps</div>
+</div>
+</div>
+
+<!-- ====== PULL VIEW ====== -->
+<div class="view" id="view-pull">
+<div class="workout-page" id="pull-page" style="--acc:var(--pull)">
+  <div class="w-header" data-word="PULL">
+    <div class="header-tag">Tuesday · Workout Plan</div>
+    <div class="w-h1">PULL<br><span>DAY</span></div>
+    <div class="header-meta">
+      <div class="meta-pill">⏱ <span>~65–80 min</span></div>
+      <div class="meta-pill">🔥 <span>8 Exercises</span></div>
+      <div class="meta-pill">💪 <span>Back · Biceps</span></div>
+    </div>
+  </div>
+  <div class="prog-wrap"><div class="prog-label"><span>Progress</span><strong id="pull-prog-text">0 / 8 done</strong></div><div class="prog-bar"><div class="prog-fill" id="pull-prog-fill" style="width:0%"></div></div></div>
+  <div class="w-content">
+    <div class="muscle-bars">
+      <div class="muscle-row"><div class="muscle-label" style="color:#0ea5e9">Lats</div><div class="bar-track"><div class="bar-fill" style="--w:35%;background:#0ea5e9"></div></div><div class="muscle-pct" style="color:#0ea5e9">35%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#38bdf8">Mid Back</div><div class="bar-track"><div class="bar-fill" style="--w:30%;background:#38bdf8"></div></div><div class="muscle-pct" style="color:#38bdf8">30%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#a78bfa">Biceps</div><div class="bar-track"><div class="bar-fill" style="--w:25%;background:#a78bfa"></div></div><div class="muscle-pct" style="color:#a78bfa">25%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#c4b5fd">Rear Delt</div><div class="bar-track"><div class="bar-fill" style="--w:10%;background:#c4b5fd"></div></div><div class="muscle-pct" style="color:#c4b5fd">10%</div></div>
+    </div>
+    <div class="sec-div"><div class="sd-dot" style="background:#0ea5e9"></div><div class="sd-name" style="color:#0ea5e9">BACK</div><div class="sd-count">5 ex</div></div>
+    <div class="ex-list" id="pull-back"></div>
+    <div class="trans-banner">💤 2 min rest → Biceps</div>
+    <div class="sec-div"><div class="sd-dot" style="background:#a78bfa"></div><div class="sd-name" style="color:#a78bfa">BICEPS</div><div class="sd-count">3 ex</div></div>
+    <div class="ex-list" id="pull-bicep"></div>
+    <div class="section-gap"></div>
+    <div class="tips-grid">
+      <div class="tip-card"><div class="tip-icon">🤜</div><div class="tip-title">Mind-Muscle</div><div class="tip-body">Pull with your elbows, not hands — keeps the lats doing the work.</div></div>
+      <div class="tip-card"><div class="tip-icon">📏</div><div class="tip-title">Full Range</div><div class="tip-body">Full stretch under load is where back and bicep growth happens most.</div></div>
+      <div class="tip-card"><div class="tip-icon">⚖️</div><div class="tip-title">Ego ≠ Growth</div><div class="tip-body">Drop the weight, slow the eccentric, and feel the muscle work.</div></div>
+      <div class="tip-card"><div class="tip-icon">🔗</div><div class="tip-title">Pair With Push</div><div class="tip-body">Push + Pull balance prevents imbalances and keeps posture healthy.</div></div>
+    </div>
+    <div class="done-banner" id="pull-done"><div class="done-banner-icon">💧</div><div class="done-banner-title">PULL DAY COMPLETE!</div><div class="done-banner-sub">Back and biceps worked to the bone 🔵</div></div>
+    <button class="reset-btn" onclick="resetDay('pull')">↺ Reset Pull Day</button>
+  </div>
+  <div class="footer-note">Pull Day · Tue · Back · Biceps · Rear Delts</div>
+</div>
+</div>
+
+<!-- ====== LEGS VIEW ====== -->
+<div class="view" id="view-legs">
+<div class="workout-page" id="legs-page" style="--acc:#f97316">
+  <div class="w-header" data-word="LEGS" style="background:linear-gradient(170deg,#0f1a0a 0%,#080809 55%);">
+    <div class="header-tag" style="background:#f97316;">Wednesday &amp; Saturday · Basketball</div>
+    <div class="w-h1">LEG +<br><span style="color:#f97316">CORE</span></div>
+    <div class="header-meta">
+      <div class="meta-pill">⏱ <span>~65–75 min</span></div>
+      <div class="meta-pill">⚡ <span>10 Exercises</span></div>
+      <div class="meta-pill">🏀 <span>Vertical Focus</span></div>
+      <div class="meta-pill">🦵 <span>Power · Stability · Core</span></div>
+    </div>
+  </div>
+  <div class="prog-wrap"><div class="prog-label"><span>Progress</span><strong id="legs-prog-text" style="color:#f97316">0 / 10 done</strong></div><div class="prog-bar"><div class="prog-fill" id="legs-prog-fill" style="width:0%;background:#f97316"></div></div></div>
+
+  <!-- Goal banner -->
+  <div style="margin:10px 14px 0;">
+    <div style="background:linear-gradient(135deg,#0f1a0a,#111520);border:1px solid #1e3a1a;border-radius:13px;padding:15px 17px;display:flex;gap:13px;align-items:flex-start;">
+      <div style="font-size:26px;flex-shrink:0;margin-top:2px;">🎯</div>
+      <div>
+        <div style="font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:#4ade80;margin-bottom:4px;">THE GOAL: VERTICAL POWER</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.6;">This session trains fast-twitch muscle fibers, explosive hip extension, and reactive strength — the exact qualities that add inches to your vertical. Low reps, full effort, full recovery. Speed of movement matters more than the weight on the bar.</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="warmup-strip" style="margin-top:10px;">🔥 <strong>Warm-Up (8 min):</strong> 3 min light bike or jog → ankle circles ×15 each → leg swings (front/back + side) ×12 each → bodyweight jump squats ×10 (easy) → glute bridges ×15 → hip flexor stretch 30 sec each side.</div>
+
+  <div class="w-content">
+    <!-- PHASE 1: STRENGTH -->
+    <div class="sec-div"><div class="sd-dot" style="background:#ef4444"></div><div class="sd-name" style="color:#ef4444">STRENGTH BASE</div><div class="sd-count">2 ex · Heavy · Low Reps</div></div>
+    <div class="ex-list" id="legs-strength"></div>
+    <div style="background:linear-gradient(135deg,#1a0f00,#111520);border:1px solid #3a2000;border-radius:10px;padding:12px 14px;display:flex;align-items:flex-start;gap:10px;margin:10px 0 4px;">
+      <div style="font-size:18px;flex-shrink:0;">⚡</div>
+      <div style="font-size:12px;color:#a16207;line-height:1.5;"><strong style="color:#fbbf24;">Why heavy strength first?</strong> Building maximal strength is the foundation — you can only express power up to your strength ceiling. These sets build the base everything else sits on.</div>
+    </div>
+
+    <!-- PHASE 2: POWER -->
+    <div class="sec-div"><div class="sd-dot" style="background:#fbbf24"></div><div class="sd-name" style="color:#fbbf24">POWER &amp; EXPLOSION</div><div class="sd-count">4 ex · Fast · Athletic</div></div>
+    <div class="ex-list" id="legs-power"></div>
+
+    <!-- PHASE 3: CORE -->
+    <div class="sec-div"><div class="sd-dot" style="background:#34d399"></div><div class="sd-name" style="color:#34d399">ATHLETIC CORE</div><div class="sd-count">4 ex · Stability · Transfer</div></div>
+    <div class="ex-list" id="legs-core"></div>
+
+    <div class="section-gap"></div>
+    <div class="tips-grid">
+      <div class="tip-card"><div class="tip-icon">⚡</div><div class="tip-title">Speed of Intent</div><div class="tip-body">Always try to move the weight as fast as possible on the concentric. Even under load, that intent activates fast-twitch fibers.</div></div>
+      <div class="tip-card"><div class="tip-icon">😴</div><div class="tip-title">Rest Fully</div><div class="tip-body">Power work needs full recovery between sets. Cutting rest short turns this into cardio. 3 min on heavy sets.</div></div>
+      <div class="tip-card"><div class="tip-icon">📅</div><div class="tip-title">Frequency</div><div class="tip-body">Once per week is enough in-season. Off-season you can go twice weekly with 72+ hrs between sessions.</div></div>
+      <div class="tip-card"><div class="tip-icon">🏀</div><div class="tip-title">Practice Still Wins</div><div class="tip-body">The gym builds the engine. Jumping on the court — practicing approach jumps, two-foot jumps — teaches your body to USE that power.</div></div>
+    </div>
+    <div class="done-banner" id="legs-done"><div class="done-banner-icon">🏀</div><div class="done-banner-title">BBALL LEG DAY DONE!</div><div class="done-banner-sub">Vertical power locked in. Eat, hydrate, sleep. 🟠</div></div>
+    <button class="reset-btn" onclick="resetDay('legs')">↺ Reset Legs Day</button>
+  </div>
+  <div class="footer-note">Leg + Core · Basketball Athlete · Built to Elevate 🏀</div>
+</div>
+</div>
+
+<!-- ====== UPPER BODY VIEW ====== -->
+<div class="view" id="view-upper">
+<div class="workout-page" id="upper-page" style="--acc:#a855f7">
+  <div class="w-header" data-word="UPPER">
+    <div class="header-tag">Friday · Push + Pull Combined</div>
+    <div class="w-h1">UPPER<br><span>BODY</span></div>
+    <div class="header-meta">
+      <div class="meta-pill">⏱ <span>~75–85 min</span></div>
+      <div class="meta-pill">💪 <span>8 Exercises</span></div>
+      <div class="meta-pill">🔥 <span>Full Upper Body</span></div>
+    </div>
+  </div>
+  <div class="prog-wrap"><div class="prog-label"><span>Progress</span><strong id="upper-prog-text">0 / 8 done</strong></div><div class="prog-bar"><div class="prog-fill" id="upper-prog-fill" style="width:0%"></div></div></div>
+  <div class="warmup-strip">💡 <strong>Friday Upper:</strong> This is your push/pull combination day. Alternating push and pull exercises maximises recovery between movements and keeps intensity high throughout.</div>
+  <div class="w-content">
+    <div class="muscle-bars">
+      <div class="muscle-row"><div class="muscle-label" style="color:#ff4500">Chest</div><div class="bar-track"><div class="bar-fill" style="--w:22%;background:#ff4500"></div></div><div class="muscle-pct" style="color:#ff4500">22%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#0ea5e9">Back</div><div class="bar-track"><div class="bar-fill" style="--w:28%;background:#0ea5e9"></div></div><div class="muscle-pct" style="color:#0ea5e9">28%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#ff8c00">Shoulders</div><div class="bar-track"><div class="bar-fill" style="--w:20%;background:#ff8c00"></div></div><div class="muscle-pct" style="color:#ff8c00">20%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#a78bfa">Biceps</div><div class="bar-track"><div class="bar-fill" style="--w:15%;background:#a78bfa"></div></div><div class="muscle-pct" style="color:#a78bfa">15%</div></div>
+      <div class="muscle-row"><div class="muscle-label" style="color:#ffcc00">Triceps</div><div class="bar-track"><div class="bar-fill" style="--w:15%;background:#ffcc00"></div></div><div class="muscle-pct" style="color:#ffcc00">15%</div></div>
+    </div>
+    <div class="sec-div"><div class="sd-dot" style="background:#a855f7"></div><div class="sd-name" style="color:#a855f7">PUSH / PULL SUPERSET</div><div class="sd-count">8 ex</div></div>
+    <div class="ex-list" id="upper-all"></div>
+    <div class="section-gap"></div>
+    <div class="tips-grid">
+      <div class="tip-card"><div class="tip-icon">🔄</div><div class="tip-title">Superset Style</div><div class="tip-body">Rest 60–90 sec between each exercise. Push and pull movements balance each other so you recover faster.</div></div>
+      <div class="tip-card"><div class="tip-icon">⚡</div><div class="tip-title">Moderate Weight</div><div class="tip-body">This is a volume day, not a max effort day. Aim for 70–75% of your 1RM — controlled and clean reps.</div></div>
+      <div class="tip-card"><div class="tip-icon">🎯</div><div class="tip-title">Full Range</div><div class="tip-body">With fatigue building, it's easy to cut range of motion. Stay strict — half reps are half gains.</div></div>
+      <div class="tip-card"><div class="tip-icon">🌙</div><div class="tip-title">Recovery Weekend</div><div class="tip-body">Saturday is legs again and Sunday is full rest. Let upper body recover before next Monday's Push day.</div></div>
+    </div>
+    <div class="done-banner" id="upper-done"><div class="done-banner-icon">💪</div><div class="done-banner-title">UPPER BODY COMPLETE!</div><div class="done-banner-sub">Full upper destroyed. Legs tomorrow, then rest 🟣</div></div>
+    <button class="reset-btn" onclick="resetDay('upper')">↺ Reset Upper Day</button>
+  </div>
+  <div class="footer-note">Upper Body · Fri · Push + Pull Combined</div>
+</div>
+</div>
+
+<!-- ====== CARDIO VIEW ====== -->
+<div class="view" id="view-cardio">
+<div class="cardio-page">
+  <div class="home-tag">Calorie Calculator</div>
+  <div class="cardio-title">CARDIO<br><span>TRACKER</span></div>
+  <div class="cardio-sub">Select your activity, enter your weight and duration — get an accurate calorie burn estimate based on MET values.</div>
+
+  <div class="cardio-form">
+    <!-- Weight -->
+    <div class="form-row">
+      <label class="form-label">Your Body Weight</label>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+        <input class="num-input" id="bodyweight" type="number" placeholder="e.g. 180" min="50" max="400">
+        <div class="form-select-wrap">
+          <select class="form-input" id="weight-unit">
+            <option value="lbs">lbs</option>
+            <option value="kg">kg</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Category filter -->
+    <div class="form-row">
+      <label class="form-label">Activity Category</label>
+      <div class="cat-tabs" id="cat-tabs"></div>
+    </div>
+
+    <!-- Activity picker -->
+    <div class="form-row">
+      <label class="form-label">Select Activity</label>
+      <div class="cardio-options" id="cardio-opts"></div>
+    </div>
+
+    <!-- Duration -->
+    <div class="form-row">
+      <label class="form-label">Duration</label>
+      <div class="time-row">
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase;">Minutes</div>
+          <input class="num-input" id="duration-min" type="number" placeholder="0" min="0" max="59">
+        </div>
+        <div>
+          <div style="font-size:10px;color:var(--muted);margin-bottom:5px;letter-spacing:1px;text-transform:uppercase;">Hours</div>
+          <input class="num-input" id="duration-hr" type="number" placeholder="0" min="0" max="10">
+        </div>
+      </div>
+    </div>
+
+    <button class="calc-btn" onclick="calculateCardio()">CALCULATE BURN</button>
+  </div>
+
+  <!-- Result -->
+  <div class="result-card" id="result-card">
+    <div class="result-header">
+      <div class="result-icon" id="res-icon">🏃</div>
+      <div><div class="result-title">CALORIES BURNED</div><div class="result-activity" id="res-activity">—</div></div>
+    </div>
+    <div class="cal-display">
+      <div class="cal-num" id="res-cals">0</div>
+      <div class="cal-unit">Calories (kcal)</div>
+    </div>
+    <div class="result-breakdown">
+      <div class="rb-box"><div class="rb-val" id="res-dur">—</div><div class="rb-label">Duration</div></div>
+      <div class="rb-box"><div class="rb-val" id="res-met">—</div><div class="rb-label">MET Value</div></div>
+      <div class="rb-box"><div class="rb-val" id="res-rate">—</div><div class="rb-label">Cal/min</div></div>
+    </div>
+    <div class="result-note" id="res-note"></div>
+    <button class="calc-btn" style="margin-top:12px;background:rgba(244,114,182,.15);color:var(--cardio);border:1px solid var(--cardio);" onclick="logSession()">＋ Add to Today's Log</button>
+  </div>
+
+  <!-- Log -->
+  <div class="log-section" id="log-section" style="display:none;">
+    <div class="log-title">Today's Cardio Log</div>
+    <div class="log-list" id="log-list"></div>
+    <div class="log-total"><div class="log-total-label">Total Burned Today</div><div class="log-total-val" id="log-total-val">0 kcal</div></div>
+  </div>
+</div>
+</div>
+
+<script>
+/* ============================================================
+   DATA
+============================================================ */
+const pushData = {
+  chest:[
+    {num:"01 · PRIMARY",name:"Barbell Flat Bench Press",badge:"Compound",color:"#ff4500",sets:"4",reps:"4–6",rest:"3 min",tip:"Your primary strength movement. Full stretch at the bottom, drive explosively. Shoulder blades retracted, feet flat on floor."},
+    {num:"02 · SECONDARY",name:"Incline Dumbbell Press",badge:"Compound",color:"#ff4500",sets:"3",reps:"8–10",rest:"2 min",tip:"Targets upper chest. Bench at 30–45°. Slight elbow tuck for shoulder health. Lower all the way for full stretch."},
+    {num:"03 · ISOLATION",name:"Cable Chest Fly (Low to High)",badge:"Isolation",color:"#ff4500",sets:"3",reps:"12–15",rest:"90 sec",tip:"Cables maintain constant tension. Go light, feel the stretch, squeeze hard at the top. Great for upper chest definition."},
+  ],
+  shoulder:[
+    {num:"04 · PRIMARY",name:"Seated Dumbbell Shoulder Press",badge:"Compound",color:"#ff8c00",sets:"4",reps:"6–8",rest:"2–3 min",tip:"Seated removes momentum. Press to just below lockout to keep tension on delts. Neutral grip is easiest on wrists."},
+    {num:"05 · LATERAL",name:"Dumbbell Lateral Raises",badge:"Isolation",color:"#ff8c00",sets:"4",reps:"12–15",rest:"90 sec",tip:"#1 exercise for shoulder width. Lead with elbows, slight forward lean. Light enough that traps don't take over."},
+    {num:"06 · REAR",name:"Face Pulls (Cable)",badge:"Isolation",color:"#ff8c00",sets:"3",reps:"15–20",rest:"60 sec",tip:"Critical for rear delts and rotator cuff health. Pull to face height, elbows flared high. Essential for shoulder longevity."},
+  ],
+  tricep:[
+    {num:"07 · PRIMARY",name:"Tricep Rope Pushdown",badge:"Isolation",color:"#ffcc00",sets:"3",reps:"10–12",rest:"90 sec",tip:"Spread the rope at the bottom for peak contraction. Elbows pinned to sides — only forearms move. Full extension every rep."},
+    {num:"08 · FINISHER",name:"Overhead EZ-Bar Tricep Extension",badge:"Isolation",color:"#ffcc00",sets:"3",reps:"10–12",rest:"90 sec",tip:"Overhead position fully stretches the long head — the biggest third of the tricep. Slow eccentric, elbows forward, don't flare."},
+  ],
+};
+
+const pullData = {
+  back:[
+    {num:"01 · PRIMARY",name:"Weighted Pull-Ups",badge:"Compound",color:"#0ea5e9",sets:"4",reps:"4–6",rest:"3 min",tip:"King of back exercises. Use a weight belt for load. Full hang at bottom, chin over bar at top. Shoulder-width or wider grip."},
+    {num:"02 · SECONDARY",name:"Barbell Bent-Over Row",badge:"Compound",color:"#0ea5e9",sets:"4",reps:"6–8",rest:"2–3 min",tip:"Heavy horizontal pull. Hinge to ~45°, overhand grip, row bar to lower chest. Squeeze shoulder blades at the top."},
+    {num:"03 · WIDTH",name:"Wide-Grip Lat Pulldown",badge:"Compound",color:"#0ea5e9",sets:"3",reps:"10–12",rest:"2 min",tip:"Emphasises lat width. Slight lean back, pull bar to upper chest, elbows drive down and back. Full stretch at top."},
+    {num:"04 · MID BACK",name:"Seated Cable Row (Close Grip)",badge:"Compound",color:"#38bdf8",sets:"3",reps:"10–12",rest:"90 sec",tip:"Neutral grip hits mid-back and rhomboids hard. Row elbows past torso, hold 1 sec at full contraction. Full stretch forward."},
+    {num:"05 · ISOLATION",name:"Single-Arm Dumbbell Row",badge:"Isolation",color:"#38bdf8",sets:"3",reps:"10–12/side",rest:"90 sec",tip:"Fixes muscle imbalances. Brace on a bench, row elbow high past hip. Go heavier than you think — it's a strength move too."},
+  ],
+  bicep:[
+    {num:"06 · PRIMARY",name:"Barbell Curl",badge:"Compound",color:"#a78bfa",sets:"3",reps:"6–8",rest:"2 min",tip:"Heaviest bicep movement. Supinated grip, elbows tucked, full extension at bottom. No swinging — load the bicep."},
+    {num:"07 · STRETCH",name:"Incline Dumbbell Curl",badge:"Isolation",color:"#a78bfa",sets:"3",reps:"10–12",rest:"90 sec",tip:"Incline position puts bicep in deep stretch — elite for long head development. Arms hang fully back before curling."},
+    {num:"08 · FINISHER",name:"Hammer Curl",badge:"Isolation",color:"#c4b5fd",sets:"3",reps:"10–12",rest:"60 sec",tip:"Neutral grip targets brachialis and brachioradialis — muscles that push the bicep peak higher. Alternate arms, controlled tempo."},
+  ],
+};
+
+const legsData = {
+  strength:[
+    {num:"01 · Primary Strength",name:"Barbell Back Squat",badge:"Compound",color:"#ef4444",sets:"4",reps:"4–5",rest:"3 min",tip:"The foundation of vertical jump strength. Go to parallel or just below. DRIVE up as fast as possible — the intent to move explosively recruits fast-twitch fibers even with heavier loads. Keep chest up, brace hard."},
+    {num:"02 · Posterior Chain",name:"Romanian Deadlift (RDL)",badge:"Compound",color:"#ef4444",sets:"3",reps:"6–8",rest:"2.5 min",tip:"Hamstrings and glutes power the final extension of your jump. Hinge deep, feel the hamstring stretch, then drive hips forward. A strong posterior chain = a higher peak."},
+  ],
+  power:[
+    {num:"03 · Plyometric",name:"Box Jump",badge:"Explosive",color:"#fbbf24",sets:"4",reps:"5",rest:"2 min",tip:"Step DOWN — never jump down. Each rep is max effort. Pause 5 sec between reps. Quality over speed. Use a box height that challenges you but lets you land softly and controlled. Arms drive upward aggressively."},
+    {num:"04 · Unilateral Power",name:"Bulgarian Split Squat (Explosive)",badge:"Power",color:"#fbbf24",sets:"3",reps:"6 each",rest:"90 sec",tip:"Basketball is one leg at a time — this is your most sport-specific strength move. Light dumbbells or bodyweight, drive up explosively. Fixes left/right imbalances that kill your vertical."},
+    {num:"05 · Reactive",name:"Depth Drop to Vertical Jump",badge:"Plyometric",color:"#fbbf24",sets:"3",reps:"5",rest:"2 min",tip:"Step off a low box (~12\"), land softly, then IMMEDIATELY explode into a max vertical jump. Trains the stretch-shortening cycle — the same reactive power you use going up for a rebound or dunk. Ground contact should be under 0.2 seconds."},
+    {num:"06 · Hip Drive",name:"Barbell Hip Thrust",badge:"Power",color:"#fbbf24",sets:"3",reps:"8",rest:"90 sec",tip:"Glute power is massively underrated for vertical jump. Full hip extension at the top is the same motion as the final push-off in your jump. Heavy and explosive — drive through your heels and squeeze hard at lockout."},
+  ],
+  core:[
+    {num:"07 · Anti-Extension",name:"Ab Wheel Rollout",badge:"Core",color:"#34d399",sets:"3",reps:"8–10",rest:"60 sec",tip:"Trains your core to resist extension under load — exactly what happens when you reach up at full extension for a layup or dunk. From knees, roll out slowly, pull back with abs. Don't let your lower back collapse."},
+    {num:"08 · Rotational Power",name:"Cable Woodchop (High to Low)",badge:"Core",color:"#34d399",sets:"3",reps:"10 each",rest:"60 sec",tip:"Basketball is a rotational sport — every pass, shot, and drive involves torso rotation. This builds the oblique power to transfer lower body force into upper body movement efficiently."},
+    {num:"09 · Hanging Strength",name:"Hanging Leg Raise",badge:"Core",color:"#34d399",sets:"3",reps:"12–15",rest:"60 sec",tip:"Builds the hip flexor and lower ab strength needed to pull your knees up explosively at the peak of your jump. Slow and controlled — no swinging. Tuck pelvis to prevent hip flexors dominating."},
+    {num:"10 · Stability Finisher",name:"Single-Leg Glute Bridge Hold",badge:"Stability",color:"#34d399",sets:"3",reps:"30 sec each",rest:"45 sec",tip:"Single-leg stability is critical for landing safely and jumping off one foot. Builds glute medius and hip stability — reduces injury risk and improves balance on drives to the basket."},
+  ],
+};
+
+const upperData = [
+  {num:"01 · PUSH",name:"Dumbbell Bench Press",badge:"Compound",color:"#ff4500",sets:"4",reps:"8–10",rest:"90 sec",tip:"Slightly wider than shoulder-width. Full stretch at bottom. Control the eccentric. Great for upper body muscle balance on this combined day."},
+  {num:"02 · PULL",name:"Weighted Pull-Ups or Lat Pulldown",badge:"Compound",color:"#0ea5e9",sets:"4",reps:"8–10",rest:"90 sec",tip:"Alternate immediately after bench press — your chest rests while you pull. Full hang at bottom, squeeze lats at top."},
+  {num:"03 · PUSH",name:"Seated Arnold Press",badge:"Compound",color:"#a855f7",sets:"3",reps:"10–12",rest:"90 sec",tip:"Rotate from palms facing you at the bottom to palms forward at the top. Hits all three heads of the delt in one movement."},
+  {num:"04 · PULL",name:"Seated Cable Row (Wide Grip)",badge:"Compound",color:"#0ea5e9",sets:"3",reps:"10–12",rest:"90 sec",tip:"Wide grip targets the upper back and rear delts more. Row elbows out wide, squeeze shoulder blades together hard at the end."},
+  {num:"05 · PUSH",name:"Dumbbell Lateral Raise",badge:"Isolation",color:"#ff8c00",sets:"3",reps:"12–15",rest:"60 sec",tip:"Lead with elbows, slight forward lean. Go lighter on this day — shoulders are already pre-fatigued from presses. Quality over load."},
+  {num:"06 · PULL",name:"Dumbbell Hammer Curl",badge:"Isolation",color:"#a78bfa",sets:"3",reps:"10–12",rest:"60 sec",tip:"Neutral grip hits brachialis. Alternate arms, keep elbows pinned. Full extension at bottom every rep."},
+  {num:"07 · PUSH",name:"Tricep Rope Pushdown",badge:"Isolation",color:"#ffcc00",sets:"3",reps:"12–15",rest:"60 sec",tip:"Elbows pinned at sides. Spread rope at bottom for peak contraction. Slow down on the eccentric for extra time under tension."},
+  {num:"08 · FINISHER",name:"Cable Face Pull",badge:"Isolation",color:"#ff8c00",sets:"3",reps:"15–20",rest:"45 sec",tip:"Always finish upper days with face pulls. Hits rear delts, external rotators. Keeps shoulders healthy and posture strong."},
+];
+
+/* ============================================================
+   CARDIO DATA — MET VALUES
+============================================================ */
+const cardioActivities = {
+  "Treadmill":[
+    {name:"Treadmill Walk — Flat (3.0 mph)",met:3.5,icon:"🚶",note:"Easy pace, flat surface. Great for active recovery or warm-up."},
+    {name:"Treadmill Walk — Flat (3.5 mph)",met:4.3,icon:"🚶",note:"Moderate walk, still conversational. Good for sustained fat burn."},
+    {name:"Treadmill Walk — Incline 5% (3.0 mph)",met:5.0,icon:"⛰️",note:"5% incline significantly increases glute and hamstring engagement."},
+    {name:"Treadmill Walk — Incline 8% (3.0 mph)",met:6.0,icon:"⛰️",note:"Steep incline walk. Burns similar to a jog with far less joint impact."},
+    {name:"Treadmill Walk — Incline 12% (2.5 mph)",met:7.0,icon:"🏔️",note:"High incline 'hike' protocol. Highly effective for calorie burn and glutes."},
+    {name:"Treadmill Walk — Incline 15% (2.5 mph)",met:8.0,icon:"🏔️",note:"Max incline walking. Used in 12-3-30 style protocols. Intense cardio without running."},
+    {name:"Treadmill Jog — Flat (5 mph)",met:8.3,icon:"🏃",note:"Light jog pace. Great for building aerobic base."},
+    {name:"Treadmill Run — Flat (6 mph)",met:9.8,icon:"🏃",note:"Moderate run pace. Efficient calorie burner."},
+    {name:"Treadmill Run — Flat (7.5 mph)",met:11.0,icon:"🏃",note:"Fast run. High cardiovascular demand."},
+    {name:"Treadmill Run — Flat (9 mph)",met:12.8,icon:"🏃",note:"High-speed running. Significant calorie burn per minute."},
+    {name:"Treadmill Run — Incline 5% (6 mph)",met:12.0,icon:"⛰️",note:"Running uphill dramatically increases calorie burn and leg drive."},
+    {name:"Treadmill HIIT Sprints (30 sec on/off)",met:13.5,icon:"⚡",note:"Alternating max effort sprints with rest. Excellent for EPOC afterburn effect."},
+  ],
+  "Stair Master":[
+    {name:"StairMaster — Level 4 (slow)",met:7.0,icon:"🪜",note:"Easy pace. Great for beginners or active recovery."},
+    {name:"StairMaster — Level 7 (moderate)",met:9.0,icon:"🪜",note:"Moderate intensity. Targets glutes, quads, and calves heavily."},
+    {name:"StairMaster — Level 10 (fast)",met:10.5,icon:"🪜",note:"High pace. Challenging cardiovascular demand with full lower-body activation."},
+    {name:"StairMaster — Level 14 (very fast)",met:12.0,icon:"🔥",note:"Near-maximal effort on the stairmaster. Serious calorie burn per minute."},
+    {name:"StairMaster — Intervals (vary level 5–12)",met:11.0,icon:"⚡",note:"Alternating fast and slow levels every 60–90 sec. Maximises fat oxidation."},
+    {name:"StairMaster — Skipping Steps",met:11.5,icon:"🔥",note:"Taking 2 steps at a time. Increases glute activation and cardiovascular load."},
+  ],
+  "Cycling":[
+    {name:"Stationary Bike — Easy (<50W)",met:3.5,icon:"🚴",note:"Light pedalling. Great for warm-up or cooldown."},
+    {name:"Stationary Bike — Moderate (100W)",met:7.0,icon:"🚴",note:"Comfortable pace with moderate resistance. Sustained fat burn."},
+    {name:"Stationary Bike — Vigorous (150W)",met:10.5,icon:"🚴",note:"High resistance, cycling fast. Solid cardiovascular challenge."},
+    {name:"Stationary Bike — Max Effort (200W+)",met:14.0,icon:"🔥",note:"Sprint intervals or sustained max power. Very high calorie burn."},
+    {name:"Spin Class",met:8.5,icon:"🎵",note:"Instructor-led class with music. Intervals built into the format."},
+    {name:"Outdoor Cycling — Leisure (12 mph)",met:6.8,icon:"🚵",note:"Flat road cycling at a relaxed pace."},
+    {name:"Outdoor Cycling — Moderate (14–16 mph)",met:10.0,icon:"🚵",note:"Road cycling at a solid pace. Good aerobic workout."},
+    {name:"Outdoor Cycling — Fast (16–20 mph)",met:12.0,icon:"🚵",note:"Fast cycling with racing effort. High calorie expenditure."},
+  ],
+  "Rowing & Elliptical":[
+    {name:"Rowing Machine — Light",met:7.0,icon:"🚣",note:"Easy pace, low resistance. Full-body movement pattern — back, legs, arms."},
+    {name:"Rowing Machine — Moderate",met:8.5,icon:"🚣",note:"Moderate effort rowing. Excellent calorie burn with low impact."},
+    {name:"Rowing Machine — Vigorous",met:12.0,icon:"🚣",note:"High power output rowing. One of the best calorie-per-minute machines."},
+    {name:"Rowing Machine — HIIT Sprints",met:14.0,icon:"⚡",note:"500m max efforts with rest. Extremely demanding. Great for conditioning."},
+    {name:"Elliptical — Light Resistance",met:5.0,icon:"⭕",note:"Low intensity elliptical. Joint-friendly cardio option."},
+    {name:"Elliptical — Moderate Resistance",met:8.0,icon:"⭕",note:"Medium resistance with good pace. Efficient calorie burn."},
+    {name:"Elliptical — High Resistance",met:9.5,icon:"⭕",note:"High resistance challenges legs significantly. Burns like a stairmaster."},
+  ],
+  "Sports":[
+    {name:"Basketball — Casual Shooting Around",met:4.5,icon:"🏀",note:"Light movement, mostly standing. Low intensity but still active."},
+    {name:"Basketball — Half Court Game",met:6.5,icon:"🏀",note:"Moderate intensity with intermittent sprinting and defensive movement."},
+    {name:"Basketball — Full Court Game",met:8.0,icon:"🏀",note:"Full-court game. High-intensity intervals of sprinting, cutting, and jumping."},
+    {name:"Soccer — Recreational",met:7.0,icon:"⚽",note:"Casual game or practice. Lots of varied movement."},
+    {name:"Soccer — Competitive Match",met:10.0,icon:"⚽",note:"Competitive full game. Near-constant movement for 90 mins."},
+    {name:"Tennis — Casual Rally",met:5.0,icon:"🎾",note:"Hitting with a partner, not competitive. Moderate effort."},
+    {name:"Tennis — Competitive Singles",met:8.0,icon:"🎾",note:"Competitive match. Explosive lateral movement and sprinting."},
+    {name:"Swimming — Casual",met:6.0,icon:"🏊",note:"Easy laps or freestyle at a relaxed pace."},
+    {name:"Swimming — Vigorous (freestyle)",met:10.0,icon:"🏊",note:"Hard swimming effort. Full body workout, zero impact."},
+    {name:"Boxing — Bag Work",met:9.0,icon:"🥊",note:"Heavy bag rounds. Excellent for conditioning, arms, and core."},
+    {name:"Boxing — Sparring",met:11.0,icon:"🥊",note:"Live sparring. High intensity, demanding full-body output."},
+    {name:"Jump Rope — Moderate",met:10.0,icon:"🪢",note:"Steady jumping at moderate cadence. Great for coordination and cardio."},
+    {name:"Jump Rope — Fast/Double Unders",met:12.5,icon:"🪢",note:"Fast rope speed. One of the most efficient cardio tools pound for pound."},
+    {name:"Pickleball — Recreational",met:4.0,icon:"🏓",note:"Low-moderate intensity. Good for active recovery days."},
+    {name:"Volleyball — Recreational",met:4.0,icon:"🏐",note:"Casual game. Intermittent activity with rest periods."},
+    {name:"Flag Football",met:8.0,icon:"🏈",note:"Running, throwing, cutting. High intensity with rest periods."},
+  ],
+  "HIIT & Classes":[
+    {name:"HIIT Class (general)",met:10.0,icon:"🔥",note:"High-intensity interval class. Calorie burn continues post-workout (EPOC)."},
+    {name:"CrossFit WOD — Moderate",met:10.5,icon:"🔥",note:"Typical metcon WOD. Mixed modalities, high output."},
+    {name:"CrossFit WOD — Intense",met:13.0,icon:"🔥",note:"Heavy barbell + cardio combo WOD. Elite calorie burn."},
+    {name:"Kickboxing Class",met:9.0,icon:"🥋",note:"Cardio kickboxing. Punches, kicks, footwork. Great core engagement."},
+    {name:"Zumba",met:6.5,icon:"💃",note:"Dance-based cardio class. Fun and surprisingly effective."},
+    {name:"Circuit Training (weights + cardio)",met:8.0,icon:"⚡",note:"Moving between weights and cardio exercises with minimal rest."},
+    {name:"Burpees",met:12.0,icon:"💪",note:"Full body explosive movement. High calorie burn per rep."},
+    {name:"Battle Ropes",met:10.5,icon:"🌊",note:"Rope waves and slams. Brutal conditioning for arms and core."},
+  ],
+  "Walking & Outdoor":[
+    {name:"Outdoor Walk — Flat (3 mph)",met:3.5,icon:"🚶",note:"Easy flat walk. Good for active recovery and steps."},
+    {name:"Outdoor Walk — Hilly terrain",met:5.3,icon:"🌿",note:"Rolling hills increase effort and calorie burn significantly."},
+    {name:"Hiking — Moderate trail",met:6.0,icon:"🥾",note:"Moderate elevation and terrain. Great for lower body and cardio."},
+    {name:"Hiking — Steep trail with pack",met:8.5,icon:"🏔️",note:"Steep elevation with a loaded backpack. Very high calorie burn."},
+    {name:"Jogging Outdoors (5–6 mph)",met:8.5,icon:"🏃",note:"Steady outdoor jog. Fresh air and varied terrain."},
+    {name:"Running Outdoors — Fast (7+ mph)",met:12.0,icon:"🏃",note:"Fast outdoor run. High cardiovascular demand."},
+    {name:"Running — 5K Race Effort",met:11.5,icon:"🏁",note:"Sustained near-maximal effort for 3.1 miles."},
+  ],
+};
+
+/* ============================================================
+   STATE
+============================================================ */
+const state = {
+  push:{done:new Set(),total:8},
+  pull:{done:new Set(),total:8},
+  legs:{done:new Set(),total:10},
+  upper:{done:new Set(),total:8},
+};
+let exIdCounter = 0;
+let selectedActivity = null;
+let cardioLog = [];
+let pendingResult = null;
+let currentCat = "Treadmill";
+
+/* ============================================================
+   EXERCISE RENDERING
+============================================================ */
+function makeCard(ex, dayKey, isLegsStyle) {
+  const id = exIdCounter++;
+  ex._id = id;
+  const card = document.createElement('div');
+  card.className = 'ex-card';
+  card.style.setProperty('--cc', ex.color);
+  card.style.setProperty('--acc', ex.color);
+
+  if (!isLegsStyle) {
+    card.innerHTML = `
+      <div class="ex-card-top">
+        <div><div class="ex-num">${ex.num}</div><div class="ex-name">${ex.name}</div></div>
+        <div class="ex-card-right"><div class="ex-badge">${ex.badge}</div><button class="expand-icon">▾</button></div>
+      </div>
+      <div class="sets-row">
+        <div class="set-chip"><span class="chip-label">Sets</span>${ex.sets}</div>
+        <div class="set-chip"><span class="chip-label">Reps</span>${ex.reps}</div>
+        <div class="set-chip"><span class="chip-label">Rest</span>${ex.rest}</div>
+      </div>
+      <div class="ex-tip">🎯 ${ex.tip}</div>`;
+  } else {
+    card.innerHTML = `
+      <div class="ex-card-top">
+        <div><div class="ex-name">${ex.name}</div><div class="ex-target">${ex.target}</div><div class="rest-note">⏱ Rest: ${ex.rest}</div></div>
+        <div class="ex-card-right"><div class="ex-badge">${ex.sets}</div><button class="expand-icon">▾</button></div>
+      </div>
+      <div class="ex-tip">${ex.tip}</div>`;
+  }
+
+  const btn = card.querySelector('.expand-icon');
+  btn.addEventListener('click', e => { e.stopPropagation(); card.classList.toggle('open'); });
+  card.addEventListener('click', e => {
+    if (e.target === btn) return;
+    const done = state[dayKey].done.has(id);
+    if (done) state[dayKey].done.delete(id); else state[dayKey].done.add(id);
+    card.classList.toggle('done', !done);
+    updateProgress(dayKey);
+  });
+  return card;
+}
+
+function renderGroup(containerId, exercises, dayKey, isLegsStyle) {
+  const el = document.getElementById(containerId);
+  exercises.forEach(ex => el.appendChild(makeCard(ex, dayKey, isLegsStyle||false)));
+}
+
+function updateProgress(dayKey) {
+  const {done, total} = state[dayKey];
+  const n = done.size, pct = (n/total*100).toFixed(0);
+  document.getElementById(`${dayKey}-prog-text`).textContent = `${n} / ${total} done`;
+  document.getElementById(`${dayKey}-prog-fill`).style.width = pct+'%';
+  const mini = document.getElementById(`${dayKey}-mini`);
+  if (mini) mini.style.width = pct+'%';
+  const ph = document.getElementById(`${dayKey}-ph`);
+  if (ph) ph.textContent = `${n}/${total}`;
+  const banner = document.getElementById(`${dayKey}-done`);
+  if (banner) banner.classList.toggle('show', n===total);
+  updateHome();
+}
+
+function updateHome() {
+  let td=0, dc=0;
+  ['push','pull','legs','upper'].forEach(d => {
+    td += state[d].done.size;
+    if (state[d].done.size===state[d].total) dc++;
+  });
+  document.getElementById('total-done').textContent = td;
+  document.getElementById('days-done').textContent = dc+'/5';
+}
+
+function resetDay(dayKey) {
+  state[dayKey].done.clear();
+  document.getElementById(`view-${dayKey}`).querySelectorAll('.ex-card').forEach(c=>c.classList.remove('done','open'));
+  updateProgress(dayKey);
+}
+
+/* ============================================================
+   NAVIGATION
+============================================================ */
+function showView(name) {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'));
+  document.querySelectorAll('.day-tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById(`view-${name}`).classList.add('active');
+  document.querySelector(`[data-day="${name}"]`).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+/* ============================================================
+   CARDIO CALCULATOR
+============================================================ */
+function buildCatTabs() {
+  const el = document.getElementById('cat-tabs');
+  Object.keys(cardioActivities).forEach(cat => {
+    const btn = document.createElement('button');
+    btn.className = 'cat-tab' + (cat===currentCat?' active':'');
+    btn.textContent = cat;
+    btn.onclick = () => { currentCat=cat; buildCatTabs(); buildActivityGrid(); };
+    el.appendChild(btn);
+  });
+}
+
+function buildActivityGrid() {
+  const el = document.getElementById('cardio-opts');
+  el.innerHTML = '';
+  selectedActivity = null;
+  cardioActivities[currentCat].forEach(act => {
+    const d = document.createElement('div');
+    d.className = 'cardio-opt';
+    d.innerHTML = `<div class="opt-name">${act.icon} ${act.name.replace(/^[^\s]+\s/,'')}</div><div class="opt-met">MET: ${act.met}</div><div class="opt-cat">${currentCat}</div>`;
+    d.onclick = () => {
+      document.querySelectorAll('.cardio-opt').forEach(o=>o.classList.remove('selected'));
+      d.classList.add('selected');
+      selectedActivity = act;
+    };
+    el.appendChild(d);
+  });
+}
+
+function calculateCardio() {
+  if (!selectedActivity) { alert('Please select an activity first.'); return; }
+  const bwRaw = parseFloat(document.getElementById('bodyweight').value);
+  const unit = document.getElementById('weight-unit').value;
+  const hrs = parseFloat(document.getElementById('duration-hr').value)||0;
+  const mins = parseFloat(document.getElementById('duration-min').value)||0;
+  if (!bwRaw||bwRaw<50) { alert('Please enter a valid body weight.'); return; }
+  if (hrs===0&&mins===0) { alert('Please enter a duration.'); return; }
+  const bwKg = unit==='kg' ? bwRaw : bwRaw*0.453592;
+  const totalHrs = hrs + mins/60;
+  const cals = Math.round(selectedActivity.met * bwKg * totalHrs);
+  const rate = (cals/(totalHrs*60)).toFixed(1);
+  const durStr = hrs>0 ? `${hrs}h ${mins>0?mins+'m':''}` : `${mins}m`;
+
+  document.getElementById('res-icon').textContent = selectedActivity.icon;
+  document.getElementById('res-activity').textContent = selectedActivity.name;
+  document.getElementById('res-cals').textContent = cals.toLocaleString();
+  document.getElementById('res-dur').textContent = durStr;
+  document.getElementById('res-met').textContent = selectedActivity.met;
+  document.getElementById('res-rate').textContent = rate;
+  document.getElementById('res-note').textContent = selectedActivity.note + ' | Formula: MET × body weight (kg) × duration (hrs). Values are estimates; actual burn varies with fitness level and individual metabolism.';
+
+  pendingResult = {name:selectedActivity.name, icon:selectedActivity.icon, cals, durStr, bw:bwRaw, unit};
+  document.getElementById('result-card').classList.add('show');
+  document.getElementById('result-card').scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+function logSession() {
+  if (!pendingResult) return;
+  cardioLog.push(pendingResult);
+  renderLog();
+  document.getElementById('log-section').style.display = 'block';
+}
+
+function renderLog() {
+  const el = document.getElementById('log-list');
+  el.innerHTML = '';
+  let total = 0;
+  cardioLog.forEach((item,i) => {
+    total += item.cals;
+    const d = document.createElement('div');
+    d.className = 'log-item';
+    d.innerHTML = `<div class="log-left"><div class="log-name">${item.icon} ${item.name}</div><div class="log-detail">${item.durStr} · ${item.bw}${item.unit}</div></div><div style="display:flex;align-items:center;gap:4px"><div class="log-cals">${item.cals}</div><button class="log-del" onclick="deleteLog(${i})">✕</button></div>`;
+    el.appendChild(d);
+  });
+  document.getElementById('log-total-val').textContent = total.toLocaleString()+' kcal';
+}
+
+function deleteLog(i) {
+  cardioLog.splice(i,1);
+  renderLog();
+  if (cardioLog.length===0) document.getElementById('log-section').style.display='none';
+}
+
+/* ============================================================
+   INIT
+============================================================ */
+// Push
+renderGroup('push-chest', pushData.chest, 'push');
+renderGroup('push-shoulder', pushData.shoulder, 'push');
+renderGroup('push-tricep', pushData.tricep, 'push');
+
+// Pull
+renderGroup('pull-back', pullData.back, 'pull');
+renderGroup('pull-bicep', pullData.bicep, 'pull');
+
+// Legs (Basketball)
+renderGroup('legs-strength', legsData.strength, 'legs');
+renderGroup('legs-power', legsData.power, 'legs');
+renderGroup('legs-core', legsData.core, 'legs');
+
+// Upper
+renderGroup('upper-all', upperData, 'upper');
+
+// Cardio
+buildCatTabs();
+buildActivityGrid();
+</script>
+</body>
+</html>
